@@ -9,6 +9,23 @@
     <script src="script.js" defer></script>
 </head>
 <body>
-    <div id="clock"></div>
+    <div class="box top">
+        <div id="clock"></div>
+        <div id="date" class="small-text"></div>
+    </div>
+    <div class="middle">
+        <p id="alarmDisplay"></p>
+    </div>
+    <div class="box bottom">
+        <label class="checkboxes">
+            <input type="checkbox" id="soundCheckbox" checked>
+            Enable Sound
+        </label>
+        <label class="checkboxes">
+            <input type="checkbox" id="vibrateCheckbox" checked>
+            Enable Vibration
+        </label>
+        <button onclick="toggleAlarm()" id="alarmBtn">Set Alarm</button>
+    </div>
 </body>
 </html>
