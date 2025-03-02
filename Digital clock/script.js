@@ -2,7 +2,11 @@ const timeElement = document.getElementById("clock");
 const dateElement = document.getElementById("date");
 
 function getNumberImage(num) {
-    return `<img src="images/digit-${num}.png" alt="${num}" class="clock">`;
+    const img = document.createElement("img");
+    img.src = `images/digit-${num}.png`;
+    img.alt = num;
+    img.classList.add("clock-img");
+    return img;
 }
 
 function updateTime() {
@@ -29,21 +33,29 @@ function updateTime() {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const currDate = date.getDate().toString().padStart(2, '0');
 
-    const clock = 
-        getNumberImage(hours[0]) + getNumberImage(hours[1]) +
-        getNumberImage("colon") +
-        getNumberImage(minutes[0]) + getNumberImage(minutes[1]) +
-        getNumberImage("colon") +
-        getNumberImage(seconds[0]) + getNumberImage(seconds[1]);
+    const clockImages = [
+        hours[0], hours[1], "colon",
+        minutes[0], minutes[1], "colon",
+        seconds[0], seconds[1]
+    ];
 
-    const currentDate = `${currDate} ${months[month]} ${year}`;
+    if (timeElement.children.length === 0) {
+        clockImages.forEach((char) => timeElement.appendChild(getNumberImage(char)));
+    } else {
+        timeElement.childNodes.forEach((img, index) => {
+            const newSrc = `images/digit-${clockImages[index]}.png`;
+            if (img.src !== newSrc) {
+                img.src = newSrc;
+            }
+        });
+    }
 
-    timeElement.innerHTML = clock;
-    dateElement.innerText = currentDate;
+    dateElement.innerText = `${currDate} ${months[month]} ${year}`;
 }
 
 updateTime();
 setInterval(updateTime, 1000);
+
 
 
 let alarmHour, alarmMinute, alarmInterval;
