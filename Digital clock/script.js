@@ -57,7 +57,6 @@ updateTime();
 setInterval(updateTime, 1000);
 
 
-
 let alarmHour, alarmMinute, alarmInterval;
 let isAlarmSet = false;
 let enableSound = true, enableVibration = true;

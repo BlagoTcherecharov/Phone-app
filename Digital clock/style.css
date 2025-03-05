@@ -1,5 +1,19 @@
+@font-face {
+    font-family: "Display";
+    src: url("../fonts/display.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Seven Segment";
+    src: url("../fonts/Seven Segment.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
-    font-family: "Orbitron", serif;
+    font-family: "Seven Segment", sans-serif;
     color: green;
     background-color: black;
     text-align: center;
@@ -66,7 +80,7 @@ body {
 }
 
 button {
-    font-family: "Orbitron", serif;
+    font-family: "Display", sans-serif;
     color: green;
     font-size: 30px;
     background: none;
