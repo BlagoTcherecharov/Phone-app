@@ -1,30 +1,14 @@
-/*const APP_ID = 'dictionary-rmsrt';
-const ATLAS_SERVICE = 'mongodb-atlas';
-const DATABASE_NAME = 'dictionary';
-const COLLECTION_NAME = 'data';
+const data = require('./words.json');
 
-async function getDictionary(language) {
-    var app = new Realm.App({id: APP_ID});
-    try {
-        let credentials = Realm.Credentials.anonymous();
-        let user = await app.logIn(credentials);
-        let client = app.currentUser.mongoClient(ATLAS_SERVICE);
-        let collection = client.db(DATABASE_NAME).collection(COLLECTION_NAME);
-        let result = await collection.find(
-            { "language": language },
-            { "projection": { "_id": 0, "language": 0 } }
-        );
-        if (result.length !== 0) {
-            dictionary = result[0].words;
-            console.log(dictionary);
-        }
-    } 
-    catch (error) {
-        showWarning("Error in database!");
-    }
-}*/
+function getWord(language, difficulty)
+{
+    const info = data.filter(item => item.language === language && item.difficulty === difficulty)
 
-let word = "next";
+    let rand = Math.floor(Math.random() * info.length)
+    return info[rand].word
+}
+
+let word = getWord("en", "easy");
 let result = [];
 let life = 6;
 let wrong_letters = [];
@@ -48,13 +32,13 @@ window.onload = init;
 //Choice of language
 function language_selection() {
     let language = document.getElementById('language').value;
-    alert(language);
+    word = getWord(language, difficulty);
 }
 
 //Choice of difficulty
 function difficulty_selection() {
     let difficulty = document.getElementById('difficulty').value;
-    alert(difficulty);
+    word = getWord(language, difficulty);
 }
 
 //Receive letters
