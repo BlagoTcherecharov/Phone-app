@@ -13,15 +13,15 @@
         
         <!-- Left side: Language & Difficulty -->
         <div class="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center border-md-end border-light p-3">
-            <h2 class="mb-3">Choose Language</h2>
-            <label for="language" class="mb-1">Choose language</label>
+            <h2 class="mb-3" data-text="chooseLanguage">Choose Language</h2>
+            <label for="language" class="mb-1" data-text="chooseLanguageLabel">Choose language</label>
             <select id="language" class="form-select mb-2 w-75">
                 <option value="en">English</option>
                 <option value="bg">Bulgarian</option>
             </select>
 
-            <h2 class="mb-3">Choose Difficulty</h2>
-            <label for="difficulty" class="mb-1">Choose difficulty</label>
+            <h2 class="mb-3" data-text="chooseDifficulty">Choose Difficulty</h2>
+            <label for="difficulty" class="mb-1" data-text="chooseDifficultyLabel">Choose difficulty</label>
             <select id="difficulty" class="form-select mb-2 w-75">
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
@@ -35,15 +35,23 @@
             <p id="word_length" class="h3"></p>
 
             <form id="letter-form" class="mt-4">
-                <label for="letter" class="form-label">Enter a letter:</label>
+                <label for="letter" class="form-label" data-text="enterLetter">Enter a letter:</label>
                 <input type="text" id="letter" class="form-control mb-2 text-center" maxlength="1">
-                <button type="submit" class="btn btn-success">Submit</button>
+                <button type="submit" class="btn btn-success" data-text="submit">Submit</button>
             </form>
 
             <p id="error" class="text-danger mt-3"></p>
             <p id="wrong_letters" class="mt-3"></p>
             <p id="lives" class="mt-3"></p>
         </div>
+    </div>
+
+    <!-- Full-screen Video Overlay -->
+    <div id="video-overlay" class="overlay">
+        <video id="result-video" class="fullscreen-video">
+            <source src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
     </div>
 
     <script src="script.js"></script>
