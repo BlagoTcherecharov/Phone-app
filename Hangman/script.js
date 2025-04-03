@@ -1,6 +1,6 @@
 let data = [];
 
-// Load the words.json file
+// Load words.json file
 fetch("./words.json")
     .then((response) => response.json())
     .then((jsonData) => {
@@ -17,7 +17,7 @@ let life = 6;
 let wrong_letters = [];
 let gameInProgress = true;
 
-// Translations object
+// Translations
 const translations = {
     en: {
         chooseLanguage: "Choose Language",
@@ -28,7 +28,9 @@ const translations = {
         submit: "Submit",
         alreadyTried: "You have already tried this letter!",
         wrongLetters: "Wrong letters: ",
-        lives: "You have {lives} lives!", 
+        lives: "You have {lives} lives!",
+        languageOptions: { en: "English", bg: "Bulgarian" },
+        difficultyOptions: { easy: "Easy", medium: "Medium", hard: "Hard" },
     },
     bg: {
         chooseLanguage: "Изберете език",
@@ -39,15 +41,16 @@ const translations = {
         submit: "Изпрати",
         alreadyTried: "Вече сте опитвали тази буква!",
         wrongLetters: "Неправилни букви: ",
-        lives: "Имате {lives} живота!", 
+        lives: "Имате {lives} живота!",
+        languageOptions: { en: "Английски", bg: "Български" },
+        difficultyOptions: { easy: "Лесно", medium: "Средно", hard: "Трудно" },
     }
 };
 
-// Function to update the text content dynamically based on selected language
+// Update text content dynamically
 function updateTextContent() {
     const languageText = translations[language];
-    
-    // Update static texts
+
     for (let key in languageText) {
         const elements = document.querySelectorAll(`[data-text="${key}"]`);
         elements.forEach((element) => {
@@ -58,49 +61,30 @@ function updateTextContent() {
             }
         });
     }
+
+    // Update dropdown options
+    document.querySelector('#language option[value="en"]').textContent = languageText.languageOptions.en;
+    document.querySelector('#language option[value="bg"]').textContent = languageText.languageOptions.bg;
+
+    document.querySelector('#difficulty option[value="easy"]').textContent = languageText.difficultyOptions.easy;
+    document.querySelector('#difficulty option[value="medium"]').textContent = languageText.difficultyOptions.medium;
+    document.querySelector('#difficulty option[value="hard"]').textContent = languageText.difficultyOptions.hard;
 }
 
-// Function to show the MP4 video when the player wins/loses
-function showVideo(resultType) {
-    const videoOverlay = document.getElementById("video-overlay");
-    const resultVideo = document.getElementById("result-video");
-
-    // Set the correct video file
-    if (resultType === "win") {
-        resultVideo.src = "videos/win.mp4"; 
-    } else {
-        resultVideo.src = "videos/lost.mp4"; 
-    }
-
-    videoOverlay.style.display = "flex"; 
-    resultVideo.play(); 
-
-    // Hide overlay when video ends and restart the game
-    resultVideo.onended = () => {
-        videoOverlay.style.display = "none";
-        startGame(); // Restart the game
-    };
-}
-
-// Function to get a random word based on language and difficulty
+// Get word from JSON
 function getWord(language, difficulty) {
-    const filteredWords = data.filter(
-        (item) => item.language === language && item.difficulty === difficulty
-    );
-
+    const filteredWords = data.filter((item) => item.language === language && item.difficulty === difficulty);
     if (filteredWords.length === 0) return "error";
-
-    let rand = Math.floor(Math.random() * filteredWords.length);
-    return filteredWords[rand].word;
+    return filteredWords[Math.floor(Math.random() * filteredWords.length)].word;
 }
 
-// Start the game after data loads
+// Start game
 function startGame() {
     word = getWord(language, difficulty);
-    init(); // Initialize the game
+    init();
 }
 
-// Initialize the game
+// Initialize game
 function init() {
     result = Array(word.length).fill("_ ");
     wrong_letters = [];
@@ -113,23 +97,21 @@ function init() {
     document.getElementById("error").innerHTML = "";
     document.getElementById("hangman-image").src = `images/hangman-1.png`;
 
-    // Update text content dynamically based on selected language
     updateTextContent();
 }
 
-// Handle language selection
+// Change language
 function language_selection() {
     language = document.getElementById("language").value;
     word = getWord(language, difficulty);
-    init(); // Reset game with new word
-    updateTextContent(); // Update the text content to the selected language
+    init();
 }
 
-// Handle difficulty selection
+// Change difficulty
 function difficulty_selection() {
     difficulty = document.getElementById("difficulty").value;
     word = getWord(language, difficulty);
-    init(); // Reset game with new word
+    init();
 }
 
 // Handle letter submission
@@ -140,57 +122,37 @@ function letter_submit(event) {
     let letterInput = document.getElementById("letter");
     let letter = letterInput.value.trim().toLowerCase();
 
-    // Validate letter input
     if (letter.length !== 1 || !/^[a-zA-Zа-яА-Я]$/.test(letter)) {
         document.getElementById("error").innerHTML = translations[language].alreadyTried;
         letterInput.value = "";
         return;
     }
 
-    let correctGuess = false;
-
-    // Check if the letter is already tried
     if (result.includes(letter) || wrong_letters.includes(letter)) {
         document.getElementById("error").innerHTML = translations[language].alreadyTried;
         letterInput.value = "";
         return;
     }
 
-    // Check if the letter is in the word
-    for (let i = 0; i < word.length; i++) {
-        if (letter === word[i]) {
-            result[i] = letter;
-            correctGuess = true;
-        }
-    }
-
-    // Handle incorrect guesses
+    let correctGuess = word.includes(letter);
     if (!correctGuess) {
         life--;
         wrong_letters.push(letter);
-        let imageIndex = 7 - life;
-        document.getElementById("hangman-image").src = `images/hangman-${imageIndex}.png`;
+    } else {
+        word.split("").forEach((char, i) => {
+            if (char === letter) result[i] = letter;
+        });
     }
 
-    // Update the game status
-    letterInput.value = "";
     document.getElementById("word_length").innerHTML = result.join(" ");
     document.getElementById("wrong_letters").innerHTML = translations[language].wrongLetters + wrong_letters.join(", ");
-    document.getElementById("lives").innerHTML = life > 0 ? translations[language].lives.replace("{lives}", life) : "You lost!";
+    document.getElementById("lives").innerHTML = translations[language].lives.replace("{lives}", life);
 
-    // Check win or lose conditions
-    if (life <= 0) {
-        gameInProgress = false;
-        showVideo("lose");
-    }
-
-    if (!result.includes("_ ")) {
-        gameInProgress = false;
-        showVideo("win");
-    }
+    if (life <= 0) gameInProgress = false;
+    if (!result.includes("_ ")) gameInProgress = false;
 }
 
-// Event listeners
+// Event Listeners
 document.getElementById("language").addEventListener("change", language_selection);
 document.getElementById("difficulty").addEventListener("change", difficulty_selection);
 document.getElementById("letter-form").addEventListener("submit", letter_submit);
