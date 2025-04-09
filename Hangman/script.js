@@ -1,14 +1,4 @@
 let data = [];
-
-// Load words.json file
-fetch("./words.json")
-    .then((response) => response.json())
-    .then((jsonData) => {
-        data = jsonData;
-        startGame();
-    })
-    .catch((error) => console.error("Error loading word data:", error));
-
 let language = "en";
 let difficulty = "easy";
 let word = "";
@@ -17,7 +7,6 @@ let life = 6;
 let wrong_letters = [];
 let gameInProgress = true;
 
-// Translations
 const translations = {
     en: {
         chooseLanguage: "Choose Language",
@@ -31,6 +20,7 @@ const translations = {
         lives: "You have {lives} lives!",
         languageOptions: { en: "English", bg: "Bulgarian" },
         difficultyOptions: { easy: "Easy", medium: "Medium", hard: "Hard" },
+        wrongAlphabet: "Please enter a Latin (A-Z) letter!",
     },
     bg: {
         chooseLanguage: "Изберете език",
@@ -44,49 +34,45 @@ const translations = {
         lives: "Имате {lives} живота!",
         languageOptions: { en: "Английски", bg: "Български" },
         difficultyOptions: { easy: "Лесно", medium: "Средно", hard: "Трудно" },
+        wrongAlphabet: "Моля, въведете буква на кирилица.",
     }
 };
 
-// Update text content dynamically
-function updateTextContent() {
-    const languageText = translations[language];
+// Wait for DOM to load
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("language").addEventListener("change", language_selection);
+    document.getElementById("difficulty").addEventListener("change", difficulty_selection);
+    document.getElementById("letter-form").addEventListener("submit", letter_submit);
+    document.getElementById("letter").addEventListener("input", () => {
+        document.getElementById("error").textContent = "";
+    });
 
-    for (let key in languageText) {
-        const elements = document.querySelectorAll(`[data-text="${key}"]`);
-        elements.forEach((element) => {
-            if (key === "lives") {
-                element.textContent = languageText[key].replace("{lives}", life);
-            } else {
-                element.textContent = languageText[key];
-            }
-        });
-    }
+    // Load words
+    fetch("./words.json")
+        .then(res => res.json())
+        .then(jsonData => {
+            data = jsonData;
+            startGame();
+        })
+        .catch(err => console.error("Error loading word data:", err));
+});
 
-    // Update dropdown options
-    document.querySelector('#language option[value="en"]').textContent = languageText.languageOptions.en;
-    document.querySelector('#language option[value="bg"]').textContent = languageText.languageOptions.bg;
-
-    document.querySelector('#difficulty option[value="easy"]').textContent = languageText.difficultyOptions.easy;
-    document.querySelector('#difficulty option[value="medium"]').textContent = languageText.difficultyOptions.medium;
-    document.querySelector('#difficulty option[value="hard"]').textContent = languageText.difficultyOptions.hard;
-}
-
-// Get word from JSON
+// Get a random word based on selected language and difficulty
 function getWord(language, difficulty) {
-    const filteredWords = data.filter((item) => item.language === language && item.difficulty === difficulty);
-    if (filteredWords.length === 0) return "error";
-    return filteredWords[Math.floor(Math.random() * filteredWords.length)].word;
+    const filtered = data.filter(item => item.language === language && item.difficulty === difficulty);
+    if (filtered.length === 0) return "error";
+    return filtered[Math.floor(Math.random() * filtered.length)].word;
 }
 
-// Start game
+// Start new game
 function startGame() {
     word = getWord(language, difficulty);
     init();
 }
 
-// Initialize game
+// Initialize game state
 function init() {
-    result = Array(word.length).fill("_ ");
+    result = Array(word.length).fill("_");
     wrong_letters = [];
     life = 6;
     gameInProgress = true;
@@ -100,14 +86,36 @@ function init() {
     updateTextContent();
 }
 
-// Change language
+// Update visible language-based UI text
+function updateTextContent() {
+    const langText = translations[language];
+
+    for (let key in langText) {
+        const elements = document.querySelectorAll(`[data-text="${key}"]`);
+        elements.forEach(el => {
+            if (key === "lives") {
+                el.textContent = langText[key].replace("{lives}", life);
+            } else {
+                el.textContent = langText[key];
+            }
+        });
+    }
+
+    document.querySelector('#language option[value="en"]').textContent = langText.languageOptions.en;
+    document.querySelector('#language option[value="bg"]').textContent = langText.languageOptions.bg;
+    document.querySelector('#difficulty option[value="easy"]').textContent = langText.difficultyOptions.easy;
+    document.querySelector('#difficulty option[value="medium"]').textContent = langText.difficultyOptions.medium;
+    document.querySelector('#difficulty option[value="hard"]').textContent = langText.difficultyOptions.hard;
+}
+
+// Change language handler
 function language_selection() {
     language = document.getElementById("language").value;
     word = getWord(language, difficulty);
     init();
 }
 
-// Change difficulty
+// Change difficulty handler
 function difficulty_selection() {
     difficulty = document.getElementById("difficulty").value;
     word = getWord(language, difficulty);
@@ -116,14 +124,23 @@ function difficulty_selection() {
 
 // Handle letter submission
 function letter_submit(event) {
+    event.preventDefault();
     if (!gameInProgress) return;
 
-    event.preventDefault();
-    let letterInput = document.getElementById("letter");
-    let letter = letterInput.value.trim().toLowerCase();
+    const letterInput = document.getElementById("letter");
+    const letter = letterInput.value.trim().toLowerCase();
 
-    if (letter.length !== 1 || !/^[a-zA-Zа-яА-Я]$/.test(letter)) {
-        document.getElementById("error").innerHTML = translations[language].alreadyTried;
+    const isLatin = /^[a-zA-Z]$/.test(letter);
+    const isCyrillic = /^[а-яА-ЯёЁ]$/.test(letter);
+
+    const isValid = language === "en" ? isLatin : isCyrillic;
+
+    if (letter.length !== 1 || !isValid) {
+        const message = language === "en"
+            ? (!isLatin ? translations.en.wrongAlphabet : translations.en.alreadyTried)
+            : (!isCyrillic ? translations.bg.wrongAlphabet : translations.bg.alreadyTried);
+
+        document.getElementById("error").innerHTML = message;
         letterInput.value = "";
         return;
     }
@@ -134,25 +151,47 @@ function letter_submit(event) {
         return;
     }
 
-    let correctGuess = word.includes(letter);
-    if (!correctGuess) {
+    let correct = false;
+    word.split("").forEach((char, i) => {
+        if (char === letter) {
+            result[i] = letter;
+            correct = true;
+        }
+    });
+
+    if (!correct) {
         life--;
         wrong_letters.push(letter);
-    } else {
-        word.split("").forEach((char, i) => {
-            if (char === letter) result[i] = letter;
-        });
+        document.getElementById("hangman-image").src = `images/hangman-${7 - life}.png`;
     }
 
     document.getElementById("word_length").innerHTML = result.join(" ");
     document.getElementById("wrong_letters").innerHTML = translations[language].wrongLetters + wrong_letters.join(", ");
     document.getElementById("lives").innerHTML = translations[language].lives.replace("{lives}", life);
+    letterInput.value = "";
 
-    if (life <= 0) gameInProgress = false;
-    if (!result.includes("_ ")) gameInProgress = false;
+    if (life <= 0) {
+        gameInProgress = false;
+        showEndVideo("lose");
+    } else if (!result.includes("_")) {
+        gameInProgress = false;
+        showEndVideo("win");
+    }
 }
 
-// Event Listeners
-document.getElementById("language").addEventListener("change", language_selection);
-document.getElementById("difficulty").addEventListener("change", difficulty_selection);
-document.getElementById("letter-form").addEventListener("submit", letter_submit);
+// Show win/lose video
+function showEndVideo(type) {
+    const overlay = document.getElementById("video-overlay");
+    const video = document.getElementById("result-video");
+    const source = video.querySelector("source");
+
+    source.src = type === "win" ? "videos/win.mp4" : "videos/lost.mp4";
+    video.load();
+    overlay.style.display = "flex";
+    video.play();
+
+    video.onended = () => {
+        overlay.style.display = "none";
+        startGame(); 
+    };
+}
